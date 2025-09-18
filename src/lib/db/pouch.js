@@ -138,8 +138,15 @@ export async function listSubmissions() {
 export async function updateSubmission(doc) {
   const inited = await init();
   if (!inited) throw new Error('DB not available in SSR');
-  doc.updatedAt = new Date().toISOString();
-  return db.put(doc);
+  // Sanitize UI-only fields before saving. CouchDB forbids arbitrary top-level keys starting with '_'.
+  // Only persist the known schema fields.
+  const allowed = ['_id', '_rev', 'type', 'status', 'fields', 'createdAt', 'updatedAt', '_attachments'];
+  const clean = {};
+  for (const key of allowed) {
+    if (doc && Object.prototype.hasOwnProperty.call(doc, key)) clean[key] = doc[key];
+  }
+  clean.updatedAt = new Date().toISOString();
+  return db.put(clean);
 }
 
 export async function deleteSubmission(doc) {
