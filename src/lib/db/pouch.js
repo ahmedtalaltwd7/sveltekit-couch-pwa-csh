@@ -1,5 +1,5 @@
 // Environment variables (Vite exposes only VITE_*)
-const COUCHDB_URL = import.meta.env?.VITE_COUCHDB_URL || 'http://31.97.118.200:5984';
+const COUCHDB_URL = import.meta.env?.VITE_COUCHDB_URL || 'https://couch.ahmedtalal.online/';
 const COUCHDB_DBNAME = import.meta.env?.VITE_COUCHDB_DBNAME || 'sveltesync';
 const COUCHDB_USERNAME = import.meta.env?.VITE_COUCHDB_USERNAME || 'admin';
 const COUCHDB_PASSWORD = import.meta.env?.VITE_COUCHDB_PASSWORD || 'password';
