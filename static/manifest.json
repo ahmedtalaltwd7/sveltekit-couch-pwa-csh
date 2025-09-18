@@ -1,12 +1,12 @@
 {
-  "name": "SvelteKit Couch PWA",
-  "short_name": "SveltePWA",
+  "name": "Haddah App",
+  "short_name": "Haddah App",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2f3ba2",
-  "description": "Offline-first PWA with CouchDB sync",
+  "description": "Haddah App",
   "icons": [
     {
       "src": "/icon-192.png",
