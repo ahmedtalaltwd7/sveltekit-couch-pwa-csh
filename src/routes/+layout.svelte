@@ -99,7 +99,7 @@
         <strong style="color: {online ? '#86efac' : '#fca5a5'}">{online ? 'Online' : 'Offline'}</strong>
     </div>
     <style>
-        .header { position: sticky; top: 0; z-index: 10; background: #0f172a; color: #fff; }
+        .header { position: sticky; top: 0; z-index: 10; background: #03fca5; color: #fff; }
         .header > .container { max-width: 1100px; margin: 0 auto; padding: 0.6rem 0.75rem; display:flex; align-items:center; justify-content:space-between; gap: var(--space-2, 0.5rem); flex-wrap: wrap; }
         .brand { font-weight: 700; color: #fff; text-decoration: none; font-size: 1.05rem; }
         .nav { display:flex; gap: 0.5rem; flex-wrap: wrap; }
