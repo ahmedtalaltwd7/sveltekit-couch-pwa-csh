@@ -6,6 +6,28 @@
   let loading = true;
   let items = [];
   let error = '';
+
+  // Search query (client-side filtering)
+  let search = '';
+  $: q = (search || '').trim().toLowerCase();
+  function matchItem(it, q) {
+    const f = it?.fields || {};
+    const hay = [
+      it?._id,
+      it?.status,
+      f.fullName,
+      f.email,
+      f.phone,
+      f.address,
+      f.city,
+      f.state,
+      f.zip,
+      f.notes
+    ].map((v) => (v ?? '').toString().toLowerCase()).join(' ');
+    return hay.includes(q);
+  }
+  $: filtered = q ? items.filter((it) => matchItem(it, q)) : items;
+
   // Track per-item busy state to prevent double clicks
   let busy = {};
   function setBusy(id, val) {
@@ -233,6 +255,17 @@
 
 <section class="wrap">
   <h1>Dashboard</h1>
+  <div class="toolbar">
+    <input
+      class="search"
+      type="search"
+      placeholder="Search by name, email, phone, status..."
+      bind:value={search}
+    />
+    {#if q}
+      <button class="btn alt small" type="button" onclick={(e) => { e.preventDefault(); search = ''; }}>Clear</button>
+    {/if}
+  </div>
   {#if notice}
     <div class="toast toast-fixed {noticeKind}" role="status" aria-live="polite">{notice}</div>
   {/if}
@@ -244,7 +277,7 @@
     <p>No submissions yet.</p>
   {:else}
     <div class="list">
-      {#each items as item (item._id)}
+      {#each filtered as item (item._id)}
         <article class="card">
           <header class="card-h">
             <div class="meta">
@@ -317,6 +350,9 @@
 
 <style>
   .wrap { width: 100%; margin: 0; padding: 1rem; }
+  .toolbar { display:flex; gap:0.5rem; align-items:center; margin: 0.5rem 0 1rem; }
+  .toolbar .search { flex: 1; min-width: 220px; padding: 0.5rem 0.65rem; border-radius:8px; border:1px solid #334155; background:#111827; color:#e5e7eb; }
+  .btn.small { padding:0.35rem 0.6rem; font-size:0.85rem; }
   .list { display: grid; gap: 1rem; }
   .card { background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; padding:1rem; border-radius:10px; display:grid; gap:0.75rem; }
   .card-h { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap: wrap; }
@@ -342,7 +378,7 @@
   .thumb { width: fit-content; display: inline-block; border: 1px solid #334155; border-radius: 8px; overflow: hidden; background: #0b1220; padding: 4px; }
   .thumb .img-btn { background: transparent; border: none; padding: 0; margin: 0; display: inline-block; cursor: zoom-in; line-height: 0; }
   .thumb img { display:block; width: 200px; height: 150px; object-fit: cover; border-radius: 4px; }
-  .thumb .src { display:block; text-align:center; color:#94a3b8; font-size: 0.75rem; margin-top: 4px; }
+  .thumb .src { display:block; text-align:center; color:#94a3b8; font-size: 0.75rem; }
   /* Lightbox */
   .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index: 1000; padding: 1rem; }
   .lightbox .inner { position: relative; max-width: 90vw; max-height: 90vh; }
