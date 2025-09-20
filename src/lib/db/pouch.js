@@ -1,3 +1,7 @@
+import { writable } from 'svelte/store';
+
+export const syncStatus = writable({ online: true, syncing: false, upToDate: false, lastError: null });
+
 // Environment variables (Vite exposes only VITE_*)
 const COUCHDB_URL = import.meta.env?.VITE_COUCHDB_URL || 'https://couch.ahmedtalal.online/';
 const COUCHDB_DBNAME = import.meta.env?.VITE_COUCHDB_DBNAME || 'sveltesync';
@@ -79,15 +83,55 @@ export function startLiveSync(onChange, onError) {
   // Fire and forget init
   let cancel = () => {};
   init().then(() => {
+    const update = (patch) => {
+      try { syncStatus.update((s) => ({ ...s, ...patch })); } catch {}
+    };
+    // track online/offline in the same lifecycle as sync
+    update({ online: typeof navigator !== 'undefined' ? navigator.onLine : true });
+    const onOnline = () => update({ online: true });
+    const onOffline = () => update({ online: false, upToDate: false });
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+
     const sync = db
       .sync(remoteDb, { live: true, retry: true, attachments: true })
-      .on('change', (info) => { onChange && onChange(info); })
-      .on('paused', (err) => { if (err && onError) onError(err); })
-      .on('active', () => {})
-      .on('denied', (err) => { console.error('Sync denied', err); onError && onError(err); })
-      .on('complete', (info) => { onChange && onChange(info); })
-      .on('error', (err) => { console.error('Sync error', err); onError && onError(err); });
-    cancel = () => sync.cancel();
+      .on('active', () => { update({ syncing: true }); })
+      .on('paused', (err) => {
+        if (err) {
+          // paused due to error (often offline)
+          update({ syncing: false, upToDate: false, lastError: err });
+          onError && onError(err);
+        } else {
+          // paused with no error means up-to-date
+          update({ syncing: false, upToDate: true, lastError: null });
+        }
+      })
+      .on('change', (info) => {
+        // a change happened; not necessarily fully up-to-date yet
+        update({ upToDate: false });
+        onChange && onChange(info);
+      })
+      .on('denied', (err) => {
+        console.error('Sync denied', err);
+        update({ lastError: err });
+        onError && onError(err);
+      })
+      .on('complete', (info) => {
+        // one-shot replications emit complete; for live this can fire on cancel
+        update({ syncing: false, upToDate: true });
+        onChange && onChange(info);
+      })
+      .on('error', (err) => {
+        console.error('Sync error', err);
+        update({ syncing: false, lastError: err, upToDate: false });
+        onError && onError(err);
+      });
+
+    cancel = () => {
+      try { sync.cancel(); } catch {}
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
   });
   return () => cancel();
 }

@@ -1,9 +1,10 @@
 <script>
   import { auth } from '$lib/stores/auth.js';
   import { onMount } from 'svelte';
-  import { listSubmissions, updateSubmission, deleteSubmission, tryGetLocalAttachment } from '$lib/db/pouch.js';
+  import { listSubmissions, updateSubmission, deleteSubmission, tryGetLocalAttachment, syncStatus } from '$lib/db/pouch.js';
 
   let loading = true;
+  $: showSyncedIcon = $syncStatus?.online && $syncStatus?.upToDate && !$syncStatus?.syncing;
   let items = [];
   let error = '';
 
@@ -265,6 +266,14 @@
     {#if q}
       <button class="btn alt small" type="button" onclick={(e) => { e.preventDefault(); search = ''; }}>Clear</button>
     {/if}
+    {#if showSyncedIcon}
+      <span class="sync-ok" title="All data synced to CouchDB" aria-label="All data synced to CouchDB">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="#065f46" stroke="#10b981" stroke-width="2"></circle>
+          <path d="M7 12.5l3 3 7-7" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+    {/if}
   </div>
   {#if notice}
     <div class="toast toast-fixed {noticeKind}" role="status" aria-live="polite">{notice}</div>
@@ -351,6 +360,8 @@
 <style>
   .wrap { width: 100%; margin: 0; padding: 1rem; }
   .toolbar { display:flex; gap:0.5rem; align-items:center; margin: 0.5rem 0 1rem; }
+  .sync-ok { display:inline-flex; width:28px; height:28px; border-radius:999px; background:#065f46; border:1px solid #10b981; align-items:center; justify-content:center; box-shadow: inset 0 0 0 2px rgba(16,185,129,0.25); }
+  .sync-ok svg { width:18px; height:18px; display:block; }
   .toolbar .search { flex: 1; min-width: 220px; padding: 0.5rem 0.65rem; border-radius:8px; border:1px solid #334155; background:#111827; color:#e5e7eb; }
   .btn.small { padding:0.35rem 0.6rem; font-size:0.85rem; }
   .list { display: grid; gap: 1rem; }
