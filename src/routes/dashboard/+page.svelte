@@ -29,6 +29,24 @@
   }
   $: filtered = q ? items.filter((it) => matchItem(it, q)) : items;
 
+  // Pagination state
+  let page = 1;
+  let pageSize = 10;
+  const pageSizeOptions = [10, 20, 50, 100];
+
+  // Derived pagination values
+  $: total = filtered.length;
+  $: totalPages = Math.max(1, Math.ceil(total / pageSize));
+  $: page = Math.min(Math.max(page, 1), totalPages);
+  $: startIndex = (page - 1) * pageSize;
+  $: endIndex = Math.min(startIndex + pageSize, total);
+  $: paged = filtered.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  function nextPage() { if (page < totalPages) page += 1; }
+  function prevPage() { if (page > 1) page -= 1; }
+  function setPageSize(n) { pageSize = +n || 10; page = 1; }
+
   // Track per-item busy state to prevent double clicks
   let busy = {};
   function setBusy(id, val) {
@@ -262,6 +280,7 @@
       type="search"
       placeholder="Search by name, email, phone, status..."
       bind:value={search}
+      oninput={() => { page = 1; }}
     />
     {#if q}
       <button class="btn alt small" type="button" onclick={(e) => { e.preventDefault(); search = ''; }}>Clear</button>
@@ -274,6 +293,20 @@
         </svg>
       </span>
     {/if}
+    <div class="pager">
+      <button class="btn small" type="button" onclick={(e) => { e.preventDefault(); prevPage(); }} disabled={page <= 1}>Prev</button>
+      <span class="info">Page {page} of {totalPages}</span>
+      <button class="btn small" type="button" onclick={(e) => { e.preventDefault(); nextPage(); }} disabled={page >= totalPages}>Next</button>
+      <label class="psize">
+        <span>Per page</span>
+        <select bind:value={pageSize} onchange={(e) => setPageSize(e.target.value)}>
+          {#each pageSizeOptions as opt}
+            <option value={opt}>{opt}</option>
+          {/each}
+        </select>
+      </label>
+      <span class="count">Showing {total ? startIndex + 1 : 0}–{endIndex} of {total}</span>
+    </div>
   </div>
   {#if notice}
     <div class="toast toast-fixed {noticeKind}" role="status" aria-live="polite">{notice}</div>
@@ -286,7 +319,7 @@
     <p>No submissions yet.</p>
   {:else}
     <div class="list">
-      {#each filtered as item (item._id)}
+      {#each paged as item (item._id)}
         <article class="card">
           <header class="card-h">
             <div class="meta">
@@ -362,6 +395,10 @@
   .toolbar { display:flex; gap:0.5rem; align-items:center; margin: 0.5rem 0 1rem; }
   .sync-ok { display:inline-flex; width:28px; height:28px; border-radius:999px; background:#065f46; border:1px solid #10b981; align-items:center; justify-content:center; box-shadow: inset 0 0 0 2px rgba(16,185,129,0.25); }
   .sync-ok svg { width:18px; height:18px; display:block; }
+  .pager { display:flex; gap:0.5rem; align-items:center; flex-wrap: wrap; }
+  .pager .info, .pager .count { color:#94a3b8; font-size:0.85rem; }
+  .pager .psize { display:flex; align-items:center; gap:0.25rem; color:#94a3b8; }
+  .pager select { background:#111827; color:#e5e7eb; border:1px solid #334155; border-radius:6px; padding:0.35rem 0.5rem; }
   .toolbar .search { flex: 1; min-width: 220px; padding: 0.5rem 0.65rem; border-radius:8px; border:1px solid #334155; background:#111827; color:#e5e7eb; }
   .btn.small { padding:0.35rem 0.6rem; font-size:0.85rem; }
   .list { display: grid; gap: 1rem; }
@@ -398,7 +435,7 @@
   @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
 </style>
 
-<svelte:window on:unload={revokeAllBlobUrls} on:keydown={(e) => { if (e.key === 'Escape' && lightboxOpen) closeLightbox(); }} />
+<svelte:window onunload={revokeAllBlobUrls} onkeydown={(e) => { if (e.key === 'Escape' && lightboxOpen) closeLightbox(); }} />
 
 {#if lightboxOpen}
   <div
