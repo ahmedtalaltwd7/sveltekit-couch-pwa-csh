@@ -55,7 +55,7 @@
         <div class="auth">
             {#if $auth.loggedIn}
                 <span class="role">{$auth.role}</span>
-                <button class="btn" on:click={logout}>Logout</button>
+                <button class="btn" onclick={(e) => { e.preventDefault(); logout(); }}>Logout</button>
             {:else}
                 <a class="btn" href="/login">Login</a>
             {/if}
@@ -67,7 +67,7 @@
     </div>
     <style>
         .header { position: sticky; top: 0; z-index: 10; background: #0f172a; color: #fff; }
-        .container { max-width: 960px; margin: 0 auto; padding: 0.75rem 1rem; display:flex; align-items:center; justify-content:space-between; gap: 0.75rem; }
+        .container { width: 100%; margin: 0; padding: 0.75rem 1rem; display:flex; align-items:center; justify-content:space-between; gap: 0.75rem; }
         .brand { font-weight: 700; color: #fff; text-decoration: none; }
         .nav { display:flex; gap: 0.75rem; }
         .nav a { color:#cbd5e1; text-decoration:none; padding: 0.25rem 0.5rem; border-radius:6px; }
@@ -92,5 +92,8 @@
 </main>
 
 <style>
-    .main .container { max-width: 960px; margin: 0 auto; padding: 1rem; }
+    .main { min-height: 100vh; }
+    .main .container { width: 100%; margin: 0; padding: 1rem; }
+    /* Optional: if you want content to align to edges on very large screens,
+       keep padding above; remove it if you want true edge-to-edge. */
 </style>

@@ -231,7 +231,7 @@
       <span>Image (optional)</span>
       <input type="file" accept="image/*" capture="environment" onchange={onFileChange} />
       <div class="row gap">
-        <button class="btn alt" type="button" onclick={openCamera}>Use Camera</button>
+        <button class="btn alt" type="button" onclick={(e) => { e.preventDefault(); openCamera(); }}>Use Camera</button>
         {#if cameraError}
           <span class="error">{cameraError}</span>
         {/if}
@@ -257,7 +257,7 @@
 </section>
 
 <style>
-  .wrap { max-width: 720px; margin: 1rem auto; padding: 0 1rem; }
+  .wrap { width: 100%; margin: 0; padding: 1rem; }
   h1 { margin-bottom: 0.5rem; }
   .card { display:grid; gap:0.75rem; background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; padding:1rem; border-radius:10px; }
   label { display:grid; gap:0.25rem; }

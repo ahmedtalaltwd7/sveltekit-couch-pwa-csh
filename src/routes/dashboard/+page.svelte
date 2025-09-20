@@ -6,6 +6,21 @@
   let loading = true;
   let items = [];
   let error = '';
+  // Track per-item busy state to prevent double clicks
+  let busy = {};
+  function setBusy(id, val) {
+    busy = { ...busy, [id]: val };
+  }
+  // Lightweight notification
+  let notice = '';
+  let noticeKind = 'success';
+  let noticeTimer = null;
+  function showNotice(msg, kind = 'success') {
+    notice = msg;
+    noticeKind = kind;
+    try { if (noticeTimer) clearTimeout(noticeTimer); } catch {}
+    noticeTimer = setTimeout(() => { notice = ''; }, 1800);
+  }
   async function imageError(e) {
     const el = e.currentTarget;
     if (!el) return;
@@ -174,15 +189,38 @@
 
   async function toggleApprove(item) {
     if (!canEdit()) return;
-    item.status = item.status === 'approved' ? 'pending' : 'approved';
-    await updateSubmission(item);
-    await load();
+    const id = item._id;
+    if (busy[id]) return;
+    setBusy(id, true);
+    try {
+      item.status = item.status === 'approved' ? 'pending' : 'approved';
+      const res = await updateSubmission(item);
+      if (res && res.rev) item._rev = res.rev;
+      showNotice('Status updated', 'success');
+    } catch (e) {
+      console.error(e);
+      showNotice('Failed to update status', 'error');
+    } finally {
+      // In case reload did not happen (error), re-enable
+      setBusy(id, false);
+    }
   }
 
   async function saveEdits(item) {
     if (!canEdit()) return;
-    await updateSubmission(item);
-    await load();
+    const id = item._id;
+    if (busy[id]) return;
+    setBusy(id, true);
+    try {
+      const res = await updateSubmission(item);
+      if (res && res.rev) item._rev = res.rev;
+      showNotice('Changes saved', 'success');
+    } catch (e) {
+      console.error(e);
+      showNotice('Failed to save changes', 'error');
+    } finally {
+      setBusy(id, false);
+    }
   }
 
   async function remove(item) {
@@ -195,6 +233,9 @@
 
 <section class="wrap">
   <h1>Dashboard</h1>
+  {#if notice}
+    <div class="toast toast-fixed {noticeKind}" role="status" aria-live="polite">{notice}</div>
+  {/if}
   {#if loading}
     <p>Loading…</p>
   {:else if error}
@@ -213,10 +254,10 @@
             </div>
             {#if canEdit()}
               <div class="actions">
-                <button class="btn alt" onclick={() => toggleApprove(item)}>
+                <button class="btn alt" type="button" onclick={(e) => { e.preventDefault(); toggleApprove(item); }} disabled={!!busy[item._id]}>
                   {item.status === 'approved' ? 'Mark Pending' : 'Approve'}
                 </button>
-                <button class="btn danger" onclick={() => remove(item)}>Delete</button>
+                <button class="btn danger" type="button" onclick={(e) => { e.preventDefault(); remove(item); }} disabled={!!busy[item._id]}>Delete</button>
               </div>
             {/if}
           </header>
@@ -256,7 +297,7 @@
           <div class="media">
             <span>Image</span>
             <div class="thumb">
-              <button type="button" class="img-btn" onclick={(e) => onThumbClick(e, item)} aria-label="Open image preview">
+              <button type="button" class="img-btn" onclick={(e) => { e.preventDefault(); onThumbClick(e, item); }} aria-label="Open image preview">
                 <img alt={item.fields.fullName || 'attachment'} src={item._imgSrc} data-id={item._id} data-source={item._imgSrc.startsWith('blob:') ? 'local' : 'remote'} onerror={imageError} />
               </button>
               <small class="src">{item._imgSrc.startsWith('blob:') ? 'Local' : 'Remote'}</small>
@@ -265,7 +306,7 @@
 
           {#if canEdit()}
             <div class="row">
-              <button class="btn" onclick={() => saveEdits(item)}>Save changes</button>
+              <button class="btn" type="button" onclick={(e) => { e.preventDefault(); saveEdits(item); }} disabled={!!busy[item._id]}>Save changes</button>
             </div>
           {/if}
         </article>
@@ -275,7 +316,7 @@
 </section>
 
 <style>
-  .wrap { max-width: 960px; margin: 1rem auto; padding: 0 1rem; }
+  .wrap { width: 100%; margin: 0; padding: 1rem; }
   .list { display: grid; gap: 1rem; }
   .card { background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; padding:1rem; border-radius:10px; display:grid; gap:0.75rem; }
   .card-h { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap: wrap; }
@@ -293,6 +334,10 @@
   .btn.danger { background:#ef4444; }
   .btn:hover { filter: brightness(0.95); }
   .error { color:#fca5a5; }
+  .toast { margin: 0.5rem 0; padding: 0.5rem 0.75rem; border-radius: 8px; border:1px solid #334155; background:#0b1220; color:#e5e7eb; }
+  .toast.success { background:#064e3b; border-color:#065f46; color:#d1fae5; }
+  .toast.error { background:#7f1d1d; border-color:#b91c1c; color:#ffe4e6; }
+  .toast-fixed { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); pointer-events: none; min-width: 220px; text-align: center; }
   .media { display:grid; gap:0.25rem; }
   .thumb { width: fit-content; display: inline-block; border: 1px solid #334155; border-radius: 8px; overflow: hidden; background: #0b1220; padding: 4px; }
   .thumb .img-btn { background: transparent; border: none; padding: 0; margin: 0; display: inline-block; cursor: zoom-in; line-height: 0; }
@@ -319,7 +364,7 @@
     onkeydown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') closeLightbox(); }}
   >
     <div class="inner" role="group" aria-label="Image container" onclick={(e) => e.stopPropagation()}>
-      <button class="close" onclick={closeLightbox} aria-label="Close" type="button">×</button>
+      <button class="close" onclick={(e) => { e.preventDefault(); closeLightbox(); }} aria-label="Close" type="button">×</button>
       <div class="viewport">
         <img
           alt={lightboxAlt}
@@ -332,9 +377,9 @@
         />
       </div>
       <div class="controls" aria-label="Zoom controls">
-        <button type="button" class="btn small" onclick={() => { zoomOut(); }} aria-label="Zoom out">−</button>
-        <button type="button" class="btn small" onclick={() => { resetZoom(); }} aria-label="Reset zoom">Reset</button>
-        <button type="button" class="btn small" onclick={() => { zoomIn(); }} aria-label="Zoom in">+</button>
+        <button type="button" class="btn small" onclick={(e) => { e.preventDefault(); zoomOut(); }} aria-label="Zoom out">−</button>
+        <button type="button" class="btn small" onclick={(e) => { e.preventDefault(); resetZoom(); }} aria-label="Reset zoom">Reset</button>
+        <button type="button" class="btn small" onclick={(e) => { e.preventDefault(); zoomIn(); }} aria-label="Zoom in">+</button>
       </div>
     </div>
   </div>
