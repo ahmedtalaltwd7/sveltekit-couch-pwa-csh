@@ -8,6 +8,20 @@
     let cancelSync = null;
     let online = $state(true);
 
+    // Theme (dark/light) persisted in localStorage
+    let theme = $state('dark');
+    function applyTheme(t) {
+        try { document.documentElement.dataset.theme = t; } catch {}
+    }
+    function setTheme(t) {
+        theme = t === 'light' ? 'light' : 'dark';
+        applyTheme(theme);
+        try { localStorage.setItem('theme', theme); } catch {}
+    }
+    function toggleTheme() {
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+    }
+
     onMount(async () => {
         // Always register our custom service worker (static/sw.js)
         try {
@@ -22,6 +36,20 @@
         const onOffline = () => (online = false);
         window.addEventListener('online', onOnline);
         window.addEventListener('offline', onOffline);
+
+        // initialize theme from storage or system preference
+        try {
+            let t = localStorage.getItem('theme');
+            if (!t) {
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                t = prefersDark ? 'dark' : 'light';
+            }
+            setTheme(t);
+            // keep in sync across tabs
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'theme' && e.newValue) applyTheme(e.newValue);
+            });
+        } catch {}
 
         cancelSync = startLiveSync();
         // No automatic exporter trigger; attachments stay in CouchDB
@@ -52,6 +80,11 @@
             <a href="/dashboard">Dashboard</a>
             {@html ''}
         </nav>
+        <div class="theme">
+            <button class="btn ghost theme-btn" onclick={(e) => { e.preventDefault(); toggleTheme(); }} aria-label="Toggle theme">
+                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </button>
+        </div>
         <div class="auth">
             {#if $auth.loggedIn}
                 <span class="role">{$auth.role}</span>
@@ -116,6 +149,16 @@
         --shadow-1: 0 1px 2px rgba(0,0,0,0.2);
         --shadow-2: 0 10px 30px rgba(0,0,0,0.5);
     }
+    :root[data-theme='light'] {
+        --bg: #f8fafc;
+        --panel: #ffffff;
+        --text: #0b1220;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --primary: #2563eb;
+        --accent: #0ea5e9;
+        --danger: #dc2626;
+    }
     :global(html), :global(body) {
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
         background: var(--bg);
@@ -123,6 +166,13 @@
     }
     .main { min-height: 100vh; }
     .main .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
-    /* Optional: if you want content to align to edges on very large screens,
-       keep padding above; remove it if you want true edge-to-edge. */
+
+    /* Light-mode header overrides */
+    :global([data-theme='light']) .header { background: #ffffff; color: #0b1220; }
+    :global([data-theme='light']) .nav a { color: #334155; }
+    :global([data-theme='light']) .nav a:hover { background: #e2e8f0; color: #0b1220; }
+    :global([data-theme='light']) .note { background: #ffffff; color: #334155; }
+
+    /* Utility */
+    .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
 </style>
