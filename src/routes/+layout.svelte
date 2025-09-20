@@ -67,7 +67,7 @@
     </div>
     <style>
         .header { position: sticky; top: 0; z-index: 10; background: #0f172a; color: #fff; }
-        .container { width: 100%; margin: 0; padding: 0.75rem 1rem; display:flex; align-items:center; justify-content:space-between; gap: 0.75rem; }
+        .header > .container { max-width: 1100px; margin: 0 auto; padding: 0.75rem 1rem; display:flex; align-items:center; justify-content:space-between; gap: 0.75rem; }
         .brand { font-weight: 700; color: #fff; text-decoration: none; }
         .nav { display:flex; gap: 0.75rem; }
         .nav a { color:#cbd5e1; text-decoration:none; padding: 0.25rem 0.5rem; border-radius:6px; }
@@ -78,7 +78,7 @@
         .btn:hover { background:#1d4ed8; }
         .note { font-size: 0.75rem; text-align:center; color:#cbd5e1; padding: 0 0 0.5rem; background:#0f172a; }
         @media (max-width: 640px) {
-            .container { flex-wrap: wrap; }
+            .header > .container { flex-wrap: wrap; }
             .nav { width: 100%; justify-content: center; }
             .auth { width: 100%; justify-content: center; }
         }
@@ -93,7 +93,7 @@
 
 <style>
     .main { min-height: 100vh; }
-    .main .container { width: 100%; margin: 0; padding: 1rem; }
+    .main .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
     /* Optional: if you want content to align to edges on very large screens,
        keep padding above; remove it if you want true edge-to-edge. */
 </style>
