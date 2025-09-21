@@ -259,20 +259,23 @@
 <style>
   .wrap { width: 100%; margin: 0; padding: 1rem; }
   h1 { margin-bottom: 0.5rem; }
-  .card { display:grid; gap:0.75rem; background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; padding:1rem; border-radius:10px; }
+  .card { display:grid; gap:0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); box-shadow: var(--shadow-1); }
   label { display:grid; gap:0.25rem; }
-  input, textarea { padding:0.6rem 0.75rem; border-radius:8px; border:1px solid #334155; background:#111827; color:#e5e7eb; }
-  .btn { padding:0.6rem 0.75rem; background:#2563eb; color:#fff; border:none; border-radius:8px; cursor:pointer; width:fit-content; }
+  input, textarea { padding:0.6rem 0.75rem; border-radius:8px; border:1px solid var(--border); background: var(--bg); color: var(--text); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+  input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgb(18 142 106 / 15%); }
+  .btn { padding:0.6rem 0.75rem; background: var(--primary); color:#fff; border:none; border-radius:8px; cursor:pointer; width:fit-content; transition: filter .2s ease, transform .1s ease; }
+  .btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
+  .btn.alt { background: var(--accent); color: #0b1220; }
   .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
-  .msg { color:#a7f3d0; }
+  .msg { color: #0b4b39; }
   .grid { display:grid; gap:0.75rem; grid-template-columns: repeat(3, 1fr); }
   .preview { margin-top: 0.5rem; display: grid; gap: 0.25rem; }
-  .preview img { max-width: 200px; max-height: 150px; border-radius: 6px; border: 1px solid #334155; object-fit: cover; }
+  .preview img { max-width: 200px; max-height: 150px; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; }
   .error { color: #fca5a5; font-size: 0.9rem; }
   .row.gap { display:flex; align-items:center; gap: 0.5rem; margin-top: 0.25rem; }
   /* Camera overlay */
   .cam-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; z-index: 1100; padding: 1rem; }
-  .cam-box { background:#0b1220; border:1px solid #1f2937; border-radius: 10px; padding: 0.75rem; display:grid; gap:0.5rem; max-width: 95vw; }
+  .cam-box { background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding: 0.75rem; display:grid; gap:0.5rem; max-width: 95vw; }
   .cam-box video { width: 80vw; max-width: 480px; height: auto; border-radius: 8px; }
   .cam-controls { display:flex; gap:0.5rem; justify-content:center; }
   @media (max-width: 640px) {
