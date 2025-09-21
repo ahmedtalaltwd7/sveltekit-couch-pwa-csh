@@ -8,7 +8,7 @@
     let cancelSync = null;
     let online = $state(true);
 
-    // Theme (dark/light) persisted in localStorage
+    // Theme (dark/light) persisted in localStorage 
     let theme = $state('dark');
     function applyTheme(t) {
         try { document.documentElement.dataset.theme = t; } catch {}
