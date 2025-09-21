@@ -170,7 +170,7 @@
     /* Light-mode header overrides */
     :global([data-theme='light']) .header { background: #ffffff; color: #0b1220; }
     :global([data-theme='light']) .nav a { color: #334155; }
-    :global([data-theme='light']) .nav a:hover { background: #e2e8f0; color: #0b1220; }
+    :global([data-theme='light']) .nav a:hover { background: #030405; color: #0b1220; }
     :global([data-theme='light']) .note { background: #ffffff; color: #334155; }
 
     /* Utility */
