@@ -847,7 +847,7 @@ textarea {
 
 {#if lightboxOpen}
   <div
-    class="lightbox"
+    class="lightbox active"
     role="dialog"
     aria-modal="true"
     aria-label="Image preview"
